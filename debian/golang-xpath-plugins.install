@@ -1,0 +1,3 @@
+_build/src/*.so lib/xpath/plugins/
+interface-leafref-plugin/*.ini lib/xpath/plugins
+qos-profile-validation-plugin/*.ini lib/xpath/plugins

@@ -1,0 +1,37 @@
+#!/usr/bin/make -f
+
+export DH_GOPKG := github.com/danos/xpath-plugins
+
+GOBUILDDIR := _build
+
+# If the cover tool is present, use it in tests
+GOCOVER=$(if $(shell go doc cmd/cover >/dev/null 2>&1 && echo true),-cover,)
+
+%:
+	dh $@ --with systemd,golang --buildsystem=golang --builddirectory=$(GOBUILDDIR)
+
+# AFAICT, each separate plugin needs a 'GOPATH ... go build ...' entry here.
+override_dh_auto_build: vet
+	cd $(GOBUILDDIR)/src; \
+	GOPATH=$(CURDIR)/$(GOBUILDDIR) \
+	go build -buildmode=plugin \
+		-o intf_leafref_plugin.so \
+		github.com/danos/xpath-plugins/interface-leafref-plugin/;
+	cd $(GOBUILDDIR)/src; \
+	GOPATH=$(CURDIR)/$(GOBUILDDIR) \
+	go build -buildmode=plugin \
+		-o qos_profile_validation_plugin.so \
+		github.com/danos/xpath-plugins/qos-profile-validation-plugin/;
+
+override_dh_strip:
+	dh_strip -X/opt/vyatta/lib/interface-leafref-plugin/intf_leafref_plugin.so; \
+	dh_strip -X/opt/vyatta/lib/qos-profile-validation-plugin/qos_profile_validation_plugin.so
+
+override_dh_auto_test:
+	dh_auto_test -- $(GOCOVER)
+
+# We do not vet vendor code
+vet:
+	if go doc cmd/vet >/dev/null 2>&1; then \
+		go tool vet $$(find . -type f -name \*.go | grep -v "/vendor/"); \
+	fi

@@ -1,0 +1,18 @@
+Source: golang-xpath-plugins
+Section: contrib/net
+Priority: extra
+Maintainer: Vyatta Package Maintainers <DL-vyatta-help@att.com>
+Build-Depends:
+ debhelper (>= 9),
+ dh-golang (>= 1.18),
+ dh-systemd,
+ golang (>= 1.10),
+ golang-github-danos-yang-dev
+Standards-Version: 3.9.8
+
+Package: golang-xpath-plugins
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Built-Using: ${misc:Built-Using}
+Description: Xpath Custom Function plugins
+ Provides custom Xpath functions for YANG
