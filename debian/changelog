@@ -1,3 +1,9 @@
+golang-xpath-plugins (0.3) unstable; urgency=medium
+
+  * DANOS Import Master
+
+ -- Vyatta Package Maintainers <DL-vyatta-help@att.com>  Fri, 15 Nov 2019 15:36:10 +0000
+
 golang-xpath-plugins (0.2.2) unstable; urgency=medium
 
   * DANOS Import
