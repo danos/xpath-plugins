@@ -1,4 +1,4 @@
-// Copyright (c) 2019, AT&T Intellectual Property Inc.
+// Copyright (c) 2019-2020, AT&T Intellectual Property Inc.
 // All rights reserved.
 //
 // SPDX-License-Identifier: MPL-2.0
@@ -119,26 +119,31 @@ func getCountOfChildNodesWithRequiredValues(
 //
 // Implements:
 //
-//  must "count(../../../../qos:name/qos:shaper/qos:profile)
+//  must "/policy:policy/qos:ingress-map or
+//        (count(../../../../qos:name/qos:shaper/qos:profile)
 //        + count(../../../../qos:profile)
 //        = count(../../../../qos:name/qos:shaper/qos:profile/qos:queue[
 //            qos:id=current()/qos:id and
 //            qos:traffic-class = current()/qos:traffic-class])
 //        + count(../../../../qos:profile/qos:queue[
 //            qos:id=current()/qos:id and
-//            qos:traffic-class = current()/qos:traffic-class])"
+//            qos:traffic-class = current()/qos:traffic-class]))"
 //
 // We can rewrite this with absolute paths and no namespaces as:
 //
-//  must "count(/policy/qos/name/shaper/profile)
+//  must "/policy/ingress-map or (count(/policy/qos/name/shaper/profile)
 //        + count(/policy/qos/profile)
 //        = count(/policy/qos/name/shaper/profile/queue[
 //            id=current()/id and
 //            traffic-class = current()/traffic-class])
 //        + count(/policy/qos/profile/queue[
 //            id=current()/id and
-//            traffic-class = current()/traffic-class])"
+//            traffic-class = current()/traffic-class]))"
 //
+// The first part of the statement reflects that this restriction does
+// not apply if the new ingress-map style of QoS classification is used.
+// So we will first check for the presence of any ingress-map and return
+// true if any is present.
 // Then if we assume we are 'rebasing' our root to /policy/qos, and we
 // replace the [a and b] predicate with [a][b], we get:
 //
@@ -162,6 +167,13 @@ func verifyQueueIdAndTrafficClass(
 	}
 	srcNode := ns0[0]
 	root := srcNode.XRoot()
+
+	// Return true if we have any ingress-maps configured
+	mapNodes := getDescendantNodesFromSingleNode(
+		root, []string{"policy", "ingress-map"})
+	if mapNodes != nil && len(mapNodes) != 0 {
+		return xpath.NewBoolDatum(true)
+	}
 
 	// Get current()/id and current()/traffic-class
 	id, trafficClass, ok := "", "", true

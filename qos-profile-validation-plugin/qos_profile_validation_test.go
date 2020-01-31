@@ -1,4 +1,4 @@
-// Copyright (c) 2019, AT&T Intellectual Property. All rights reserved.
+// Copyright (c) 2019-2020, AT&T Intellectual Property. All rights reserved.
 //
 // SPDX-License-Identifier: MPL-2.0
 
@@ -36,6 +36,30 @@ const (
 func TestQueueMatch(t *testing.T) {
 
 	tests := []qosProfileTestSpec{
+		{
+			name: "Ingress map and match id and traffic-class - PASS",
+			config: []xutils.PathType{
+				{"policy", "ingress-map"},
+				{"policy", "qos", "profile/name+prof1", "queue/id+1",
+					"traffic-class+tc1"},
+				{"policy", "qos", "name/name+pol1", "shaper",
+					"profile/name+profA", "queue/id+1", "traffic-class+tc1"},
+			},
+			startPath: "/policy/qos/profile/queue",
+			expResult: true,
+		},
+		{
+			name: "Ingress map and mismatched id and traffic-class - PASS",
+			config: []xutils.PathType{
+				{"policy", "ingress-map"},
+				{"policy", "qos", "profile/name+prof1", "queue/id+1",
+					"traffic-class+tc1"},
+				{"policy", "qos", "name/name+pol1", "shaper",
+					"profile/name+profA", "queue/id+1", TRAFFIC_CLASS_2},
+			},
+			startPath: "/policy/qos/profile/queue",
+			expResult: true,
+		},
 		{
 			name: "Global profile match id and traffic-class - PASS",
 			config: []xutils.PathType{
