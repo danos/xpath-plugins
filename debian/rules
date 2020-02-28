@@ -36,11 +36,16 @@ override_dh_auto_build: vet
 	go build $(BUILD_ARGS_GO) -buildmode=plugin \
 		-o qos_profile_validation_plugin.so \
 		github.com/danos/xpath-plugins/qos-profile-validation-plugin/;
+	cd $(GOBUILDDIR)/src; \
+	GOPATH=$(GO_PATH) \
+	go build $(BUILD_ARGS_GO) -buildmode=plugin \
+		-o siad_link_speed_plugin.so \
+		github.com/danos/xpath-plugins/siad-link-speed-plugin/;
 
 override_dh_strip:
 	dh_strip -X/opt/vyatta/lib/interface-leafref-plugin/intf_leafref_plugin.so; \
 	dh_strip -X/opt/vyatta/lib/qos-profile-validation-plugin/qos_profile_validation_plugin.so
-
+	dh_strip -X/opt/vyatta/lib/siad-link-speed-plugin/siad_link_speed_plugin.so
 override_dh_auto_test:
 	dh_auto_test -- $(GOCOVER)
 
