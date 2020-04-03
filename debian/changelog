@@ -1,3 +1,13 @@
+golang-xpath-plugins (0.4) unstable; urgency=medium
+
+  [ Brian Russell ]
+  * Relax verify-queue-id-and-traffic-class restriction
+
+  [ William Ivory ]
+  * SIAD link speed plugin (Closes: VRVDR-50258)
+
+ -- William Ivory <william.ivory@intl.att.com>  Fri, 03 Apr 2020 11:40:02 +0100
+
 golang-xpath-plugins (0.3) unstable; urgency=medium
 
   * DANOS Import Master
