@@ -3,9 +3,8 @@ Section: contrib/net
 Priority: extra
 Maintainer: Vyatta Package Maintainers <DL-vyatta-help@att.com>
 Build-Depends:
- debhelper (>= 9),
+ debhelper (>= 9.20160709),
  dh-golang (>= 1.18),
- dh-systemd,
  golang (>= 1.10),
  golang-github-danos-yang-dev
 Standards-Version: 3.9.8
