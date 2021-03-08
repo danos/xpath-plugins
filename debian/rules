@@ -52,5 +52,6 @@ override_dh_auto_test:
 # We do not vet vendor code
 vet:
 	if go doc cmd/vet >/dev/null 2>&1; then \
-		go tool vet $$(find . -type f -name \*.go | grep -v "/vendor/"); \
+		GOPATH=$(CURDIR)/$(GOBUILDDIR) go vet $$(find . -type f -name \*.go | \
+	    xargs dirname | sort -u | grep -v "/vendor/"); \
 	fi
