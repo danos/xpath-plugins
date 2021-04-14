@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020, AT&T Intellectual Property Inc.
+// Copyright (c) 2019-2021, AT&T Intellectual Property Inc.
 // All rights reserved.
 //
 // SPDX-License-Identifier: MPL-2.0
@@ -6,8 +6,7 @@
 package main
 
 import (
-	"encoding/xml"
-
+	"github.com/danos/xpath-plugins/common"
 	"github.com/danos/yang/xpath"
 	"github.com/danos/yang/xpath/xutils"
 )
@@ -31,89 +30,10 @@ var RegistrationData = []xpath.CustomFunctionInfo{
 
 // Filters used to find required nodes. Values never change, so create once
 // and reuse.
-var idFilter = xutils.NewXFilterConfigOnly(
-	xml.Name{Space: "", Local: "id"})
-var groupNameFilter = xutils.NewXFilterConfigOnly(
-	xml.Name{Space: "", Local: "group-name"})
-var toFilter = xutils.NewXFilterConfigOnly(
-	xml.Name{Space: "", Local: "to"})
-var trafficClassFilter = xutils.NewXFilterConfigOnly(
-	xml.Name{Space: "", Local: "traffic-class"})
-
-func getFilter(name string) xutils.XFilter {
-	return xutils.NewXFilterConfigOnly(xml.Name{Space: "", Local: name})
-}
-
-// getSingleChildValue - return value of child node, if there's only one.
-// Otherwise return false (error).  Wraps logic of getting value of child
-// node where we expect only a single child.
-func getSingleChildValue(node xutils.XpathNode, filter xutils.XFilter,
-) (string, bool) {
-	childNodes := node.XChildren(filter)
-	if childNodes == nil || len(childNodes) > 1 {
-		return "", false
-	}
-	return childNodes[0].XValue(), true
-}
-
-// getDescendantNodesFromSingleNode - walk the provided path for the initial
-// node to find all descendant nodes that match it.
-func getDescendantNodesFromSingleNode(
-	node xutils.XpathNode,
-	path []string,
-) []xutils.XpathNode {
-
-	nodes := []xutils.XpathNode{node}
-	return getDescendantNodes(nodes, path)
-}
-
-// getDescendantNodes - walk the provided path for all initial nodes to find
-// all descendant nodes that match it.
-func getDescendantNodes(
-	nodes []xutils.XpathNode,
-	path []string,
-) []xutils.XpathNode {
-	if len(path) == 0 {
-		return nodes
-	}
-
-	curNodes := nodes
-	for _, name := range path {
-		filteredNodes := []xutils.XpathNode{}
-		filter := getFilter(name)
-		for _, node := range curNodes {
-			filteredNodes = append(filteredNodes, node.XChildren(filter)...)
-		}
-		curNodes = filteredNodes
-	}
-	return curNodes
-}
-
-// getCountOfChildNodesWithRequiredValues - return the number of child nodes
-// that match the required set of {name, value} pairs.
-func getCountOfChildNodesWithRequiredValues(
-	nodes []xutils.XpathNode,
-	filterValueMap map[xutils.XFilter]string,
-) int {
-	count := 0
-	for _, node := range nodes {
-		match := true
-		for filter, value := range filterValueMap {
-			children := node.XChildren(filter)
-			if len(children) != 1 {
-				continue
-			}
-			if children[0].XValue() != value {
-				match = false
-				break
-			}
-		}
-		if match {
-			count++
-		}
-	}
-	return count
-}
+var idFilter = common.GetFilter("id")
+var groupNameFilter = common.GetFilter("group-name")
+var toFilter = common.GetFilter("to")
+var trafficClassFilter = common.GetFilter("traffic-class")
 
 // verifyQueueIdAndTrafficClass
 //
@@ -169,7 +89,7 @@ func verifyQueueIdAndTrafficClass(
 	root := srcNode.XRoot()
 
 	// Return true if we have any ingress-maps configured
-	mapNodes := getDescendantNodesFromSingleNode(
+	mapNodes := common.GetDescendantNodesFromSingleNode(
 		root, []string{"policy", "ingress-map"})
 	if mapNodes != nil && len(mapNodes) != 0 {
 		return xpath.NewBoolDatum(true)
@@ -177,21 +97,21 @@ func verifyQueueIdAndTrafficClass(
 
 	// Get current()/id and current()/traffic-class
 	id, trafficClass, ok := "", "", true
-	if id, ok = getSingleChildValue(srcNode, idFilter); !ok {
+	if id, ok = common.GetSingleChildValue(srcNode, idFilter); !ok {
 		return xpath.NewBoolDatum(false)
 	}
-	if trafficClass, ok = getSingleChildValue(
+	if trafficClass, ok = common.GetSingleChildValue(
 		srcNode, trafficClassFilter); !ok {
 		return xpath.NewBoolDatum(false)
 	}
 
 	var reqValues = map[xutils.XFilter]string{
-		getFilter("id"):            id,
-		getFilter("traffic-class"): trafficClass,
+		common.GetFilter("id"):            id,
+		common.GetFilter("traffic-class"): trafficClass,
 	}
 
 	// Now look at the entries that need to match id/traffic-class.
-	qosNodes := getDescendantNodesFromSingleNode(
+	qosNodes := common.GetDescendantNodesFromSingleNode(
 		root, []string{"policy", "qos"})
 	if qosNodes == nil || len(qosNodes) > 1 {
 		return xpath.NewBoolDatum(false)
@@ -199,19 +119,19 @@ func verifyQueueIdAndTrafficClass(
 	qosNode := qosNodes[0]
 
 	// Get local profiles, then queue children with matching required values.
-	localProfileNodes := getDescendantNodesFromSingleNode(qosNode,
+	localProfileNodes := common.GetDescendantNodesFromSingleNode(qosNode,
 		[]string{"name", "shaper", "profile"})
-	localProfileQueueNodes := getDescendantNodes(
+	localProfileQueueNodes := common.GetDescendantNodes(
 		localProfileNodes, []string{"queue"})
-	matchingLPQNodeCount := getCountOfChildNodesWithRequiredValues(
+	matchingLPQNodeCount := common.GetCountOfChildNodesWithRequiredValues(
 		localProfileQueueNodes, reqValues)
 
 	// Get global profiles, then queue children with matching required values.
-	globalProfileNodes := getDescendantNodesFromSingleNode(qosNode,
+	globalProfileNodes := common.GetDescendantNodesFromSingleNode(qosNode,
 		[]string{"profile"})
-	globalProfileQueueNodes := getDescendantNodes(
+	globalProfileQueueNodes := common.GetDescendantNodes(
 		globalProfileNodes, []string{"queue"})
-	matchingGPQNodeCount := getCountOfChildNodesWithRequiredValues(
+	matchingGPQNodeCount := common.GetCountOfChildNodesWithRequiredValues(
 		globalProfileQueueNodes, reqValues)
 
 	// count(name/shaper/profile) + count(profile) =
@@ -258,20 +178,20 @@ func verifyDscpGroupToQueueMappings(
 
 	// Get current()/group-name and current()/to
 	groupName, to, ok := "", "", true
-	if groupName, ok = getSingleChildValue(srcNode, groupNameFilter); !ok {
+	if groupName, ok = common.GetSingleChildValue(srcNode, groupNameFilter); !ok {
 		return xpath.NewBoolDatum(false)
 	}
-	if to, ok = getSingleChildValue(srcNode, toFilter); !ok {
+	if to, ok = common.GetSingleChildValue(srcNode, toFilter); !ok {
 		return xpath.NewBoolDatum(false)
 	}
 
 	var reqValues = map[xutils.XFilter]string{
-		getFilter("to"):         to,
-		getFilter("group-name"): groupName,
+		common.GetFilter("to"):         to,
+		common.GetFilter("group-name"): groupName,
 	}
 
 	// Local and global profiles live under same root, so get that once.
-	qosNodes := getDescendantNodesFromSingleNode(
+	qosNodes := common.GetDescendantNodesFromSingleNode(
 		root, []string{"policy", "qos"})
 	if qosNodes == nil || len(qosNodes) > 1 {
 		return xpath.NewBoolDatum(false)
@@ -279,19 +199,19 @@ func verifyDscpGroupToQueueMappings(
 	qosNode := qosNodes[0]
 
 	// Get local maps, and dscp-group children with required values.
-	localMapNodes := getDescendantNodesFromSingleNode(qosNode,
+	localMapNodes := common.GetDescendantNodesFromSingleNode(qosNode,
 		[]string{"name", "shaper", "profile", "map"})
-	localMapDscpGroupNodes := getDescendantNodes(
+	localMapDscpGroupNodes := common.GetDescendantNodes(
 		localMapNodes, []string{"dscp-group"})
-	matchingLMDGNodeCount := getCountOfChildNodesWithRequiredValues(
+	matchingLMDGNodeCount := common.GetCountOfChildNodesWithRequiredValues(
 		localMapDscpGroupNodes, reqValues)
 
 	// Get global maps, and dscp-group children with required values.
-	globalMapNodes := getDescendantNodesFromSingleNode(qosNode,
+	globalMapNodes := common.GetDescendantNodesFromSingleNode(qosNode,
 		[]string{"profile", "map"})
-	globalMapDscpGroupNodes := getDescendantNodes(
+	globalMapDscpGroupNodes := common.GetDescendantNodes(
 		globalMapNodes, []string{"dscp-group"})
-	matchingGMDGNodeCount := getCountOfChildNodesWithRequiredValues(
+	matchingGMDGNodeCount := common.GetCountOfChildNodesWithRequiredValues(
 		globalMapDscpGroupNodes, reqValues)
 
 	// count(name/shaper/profile/map) + count(profile/map) =

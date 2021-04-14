@@ -1,4 +1,4 @@
-// Copyright (c) 2020, AT&T Intellectual Property Inc.
+// Copyright (c) 2020-2021, AT&T Intellectual Property Inc.
 // All rights reserved.
 //
 // SPDX-License-Identifier: MPL-2.0
@@ -6,10 +6,10 @@
 package main
 
 import (
-	"encoding/xml"
 	"strconv"
 	"strings"
 
+	"github.com/danos/xpath-plugins/common"
 	"github.com/danos/yang/xpath"
 	"github.com/danos/yang/xpath/xutils"
 )
@@ -34,39 +34,18 @@ var RegistrationData = []xpath.CustomFunctionInfo{
 
 // Filters used to find required nodes. Values never change, so create once
 // and reuse.
-var intfFilter = xutils.NewXFilterConfigOnly(
-	xml.Name{Space: "", Local: "interfaces"})
-
-var dataplaneFilter = xutils.NewXFilterConfigOnly(
-	xml.Name{Space: "", Local: "dataplane"})
-
-var tagnodeFilter = xutils.NewXFilterConfigOnly(
-	xml.Name{Space: "", Local: "tagnode"})
-
-var disableFilter = xutils.NewXFilterConfigOnly(
-	xml.Name{Space: "", Local: "disable"})
-
-var speedFilter = xutils.NewXFilterConfigOnly(
-	xml.Name{Space: "", Local: "speed"})
-
-// getSingleChildValue - return value of child node, if there's only one.
-// Otherwise return false (error).  Wraps logic of getting value of child
-// node where we expect only a single child.
-func getSingleChildValue(node xutils.XpathNode, filter xutils.XFilter,
-) (string, bool) {
-	childNodes := node.XChildren(filter)
-	if childNodes == nil || len(childNodes) > 1 {
-		return "", false
-	}
-	return childNodes[0].XValue(), true
-}
+var intfFilter = common.GetFilter("interfaces")
+var dataplaneFilter = common.GetFilter("dataplane")
+var tagnodeFilter = common.GetFilter("tagnode")
+var disableFilter = common.GetFilter("disable")
+var speedFilter = common.GetFilter("speed")
 
 func getIntfNameAndIdForType(
 	intfNode xutils.XpathNode,
 	intfPrefix string,
 ) (string, int, bool) {
 
-	intfName, ok := getSingleChildValue(intfNode, tagnodeFilter)
+	intfName, ok := common.GetSingleChildValue(intfNode, tagnodeFilter)
 	if !ok {
 		// If we can't get interface name, then it's not one we care about.
 		return "", INVALID_INTF_ID, false
@@ -161,7 +140,7 @@ func verifySiadLinkSpeed(
 	// Return true if interface is disabled.  'disable' node is type empty so
 	// if the boolean (2nd) return value is true, that means node is set ie
 	// interface is disabled.
-	_, disabled := getSingleChildValue(curDpEntryNode, disableFilter)
+	_, disabled := common.GetSingleChildValue(curDpEntryNode, disableFilter)
 	if disabled {
 		return xpath.NewBoolDatum(true)
 	}
@@ -195,11 +174,12 @@ func verifySiadLinkSpeed(
 			continue
 		}
 
-		_, disabled := getSingleChildValue(otherIntfNode, disableFilter)
+		_, disabled := common.GetSingleChildValue(otherIntfNode, disableFilter)
 		if disabled {
 			return xpath.NewBoolDatum(true)
 		}
-		otherIntfSpeed, ok := getSingleChildValue(otherIntfNode, speedFilter)
+		otherIntfSpeed, ok := common.GetSingleChildValue(
+			otherIntfNode, speedFilter)
 		if !ok {
 			// Better to allow if node is missing or we risk an unexpected
 			// problem making valid configs invalid.

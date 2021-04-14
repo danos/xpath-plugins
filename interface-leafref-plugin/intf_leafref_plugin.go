@@ -1,4 +1,4 @@
-// Copyright (c) 2019, AT&T Intellectual Property Inc.
+// Copyright (c) 2019,2021, AT&T Intellectual Property Inc.
 // All rights reserved.
 //
 // SPDX-License-Identifier: MPL-2.0
@@ -6,11 +6,10 @@
 package main
 
 import (
-	"encoding/xml"
 	"strings"
 
+	"github.com/danos/xpath-plugins/common"
 	"github.com/danos/yang/xpath"
-	"github.com/danos/yang/xpath/xutils"
 )
 
 var RegistrationData = []xpath.CustomFunctionInfo{
@@ -39,14 +38,9 @@ var RegistrationData = []xpath.CustomFunctionInfo{
 
 // Filters used to find required nodes. Values never change, so create once
 // and reuse.
-var intfFilter = xutils.NewXFilterConfigOnly(
-	xml.Name{Space: "", Local: "interfaces"})
-
-var intfTypesFilter = xutils.NewXFilterConfigOnly(
-	xml.Name{Space: "", Local: "*"})
-
-var vifFilter = xutils.NewXFilterConfigOnly(
-	xml.Name{Space: "", Local: "vif"})
+var intfFilter = common.GetFilter("interfaces")
+var intfTypesFilter = common.GetFilter("*")
+var vifFilter = common.GetFilter("vif")
 
 // isInterfaceLeafref - implementation of is-interface-leafref(<nodeset>)
 // Matches any interface, including VIFs
