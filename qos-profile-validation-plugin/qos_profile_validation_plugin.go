@@ -90,7 +90,10 @@ func verifyQueueIdAndTrafficClass(
 
 	// Return true if we have any ingress-maps configured
 	mapNodes := common.GetDescendantNodesFromSingleNode(
-		root, []string{"policy", "ingress-map"})
+		root, []xutils.XFilter{
+			common.GetFilter("policy"),
+			common.GetFilter("ingress-map"),
+		})
 	if mapNodes != nil && len(mapNodes) != 0 {
 		return xpath.NewBoolDatum(true)
 	}
@@ -112,7 +115,10 @@ func verifyQueueIdAndTrafficClass(
 
 	// Now look at the entries that need to match id/traffic-class.
 	qosNodes := common.GetDescendantNodesFromSingleNode(
-		root, []string{"policy", "qos"})
+		root, []xutils.XFilter{
+			common.GetFilter("policy"),
+			common.GetFilter("qos"),
+		})
 	if qosNodes == nil || len(qosNodes) > 1 {
 		return xpath.NewBoolDatum(false)
 	}
@@ -120,17 +126,27 @@ func verifyQueueIdAndTrafficClass(
 
 	// Get local profiles, then queue children with matching required values.
 	localProfileNodes := common.GetDescendantNodesFromSingleNode(qosNode,
-		[]string{"name", "shaper", "profile"})
+		[]xutils.XFilter{
+			common.GetFilter("name"),
+			common.GetFilter("shaper"),
+			common.GetFilter("profile"),
+		})
 	localProfileQueueNodes := common.GetDescendantNodes(
-		localProfileNodes, []string{"queue"})
+		localProfileNodes, []xutils.XFilter{
+			common.GetFilter("queue"),
+		})
 	matchingLPQNodeCount := common.GetCountOfChildNodesWithRequiredValues(
 		localProfileQueueNodes, reqValues)
 
 	// Get global profiles, then queue children with matching required values.
 	globalProfileNodes := common.GetDescendantNodesFromSingleNode(qosNode,
-		[]string{"profile"})
+		[]xutils.XFilter{
+			common.GetFilter("profile"),
+		})
 	globalProfileQueueNodes := common.GetDescendantNodes(
-		globalProfileNodes, []string{"queue"})
+		globalProfileNodes, []xutils.XFilter{
+			common.GetFilter("queue"),
+		})
 	matchingGPQNodeCount := common.GetCountOfChildNodesWithRequiredValues(
 		globalProfileQueueNodes, reqValues)
 
@@ -192,7 +208,10 @@ func verifyDscpGroupToQueueMappings(
 
 	// Local and global profiles live under same root, so get that once.
 	qosNodes := common.GetDescendantNodesFromSingleNode(
-		root, []string{"policy", "qos"})
+		root, []xutils.XFilter{
+			common.GetFilter("policy"),
+			common.GetFilter("qos"),
+		})
 	if qosNodes == nil || len(qosNodes) > 1 {
 		return xpath.NewBoolDatum(false)
 	}
@@ -200,17 +219,29 @@ func verifyDscpGroupToQueueMappings(
 
 	// Get local maps, and dscp-group children with required values.
 	localMapNodes := common.GetDescendantNodesFromSingleNode(qosNode,
-		[]string{"name", "shaper", "profile", "map"})
+		[]xutils.XFilter{
+			common.GetFilter("name"),
+			common.GetFilter("shaper"),
+			common.GetFilter("profile"),
+			common.GetFilter("map"),
+		})
 	localMapDscpGroupNodes := common.GetDescendantNodes(
-		localMapNodes, []string{"dscp-group"})
+		localMapNodes, []xutils.XFilter{
+			common.GetFilter("dscp-group"),
+		})
 	matchingLMDGNodeCount := common.GetCountOfChildNodesWithRequiredValues(
 		localMapDscpGroupNodes, reqValues)
 
 	// Get global maps, and dscp-group children with required values.
 	globalMapNodes := common.GetDescendantNodesFromSingleNode(qosNode,
-		[]string{"profile", "map"})
+		[]xutils.XFilter{
+			common.GetFilter("profile"),
+			common.GetFilter("map"),
+		})
 	globalMapDscpGroupNodes := common.GetDescendantNodes(
-		globalMapNodes, []string{"dscp-group"})
+		globalMapNodes, []xutils.XFilter{
+			common.GetFilter("dscp-group"),
+		})
 	matchingGMDGNodeCount := common.GetCountOfChildNodesWithRequiredValues(
 		globalMapDscpGroupNodes, reqValues)
 

@@ -21,7 +21,7 @@ func GetFilter(name string) xutils.XFilter {
 // node where we expect only a single child.
 func GetSingleChildValue(node xutils.XpathNode, filter xutils.XFilter,
 ) (string, bool) {
-	childNodes := node.XChildren(filter)
+	childNodes := node.XChildren(filter, xutils.Unsorted)
 	if childNodes == nil || len(childNodes) > 1 {
 		return "", false
 	}
@@ -32,7 +32,7 @@ func GetSingleChildValue(node xutils.XpathNode, filter xutils.XFilter,
 // node to find all descendant nodes that match it.
 func GetDescendantNodesFromSingleNode(
 	node xutils.XpathNode,
-	path []string,
+	path []xutils.XFilter,
 ) []xutils.XpathNode {
 
 	nodes := []xutils.XpathNode{node}
@@ -43,18 +43,18 @@ func GetDescendantNodesFromSingleNode(
 // all descendant nodes that match it.
 func GetDescendantNodes(
 	nodes []xutils.XpathNode,
-	path []string,
+	path []xutils.XFilter,
 ) []xutils.XpathNode {
 	if len(path) == 0 {
 		return nodes
 	}
 
 	curNodes := nodes
-	for _, name := range path {
-		filteredNodes := []xutils.XpathNode{}
-		filter := GetFilter(name)
+	for _, filter := range path {
+		filteredNodes := make([]xutils.XpathNode, 0, len(curNodes))
 		for _, node := range curNodes {
-			filteredNodes = append(filteredNodes, node.XChildren(filter)...)
+			filteredNodes = append(
+				filteredNodes, node.XChildren(filter, xutils.Unsorted)...)
 		}
 		curNodes = filteredNodes
 	}
@@ -71,7 +71,7 @@ func GetCountOfChildNodesWithRequiredValues(
 	for _, node := range nodes {
 		match := true
 		for filter, value := range filterValueMap {
-			children := node.XChildren(filter)
+			children := node.XChildren(filter, xutils.Unsorted)
 			if len(children) != 1 {
 				continue
 			}
