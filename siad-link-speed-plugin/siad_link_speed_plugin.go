@@ -158,12 +158,12 @@ func verifySiadLinkSpeed(
 
 	// Return false if any other interface in range <startIntf> to <endIntf>
 	// is not disabled and speed isn't either auto or same as current node.
-	intfNodes := curSpeedNode.XRoot().XChildren(intfFilter)
+	intfNodes := curSpeedNode.XRoot().XChildren(intfFilter, xutils.Sorted)
 	if intfNodes == nil || len(intfNodes) > 1 {
 		return xpath.NewBoolDatum(true)
 	}
 
-	dpNodes := intfNodes[0].XChildren(dataplaneFilter)
+	dpNodes := intfNodes[0].XChildren(dataplaneFilter, xutils.Sorted)
 	for _, otherIntfNode := range dpNodes {
 		_, intfID, ok := getIntfNameAndIdForType(
 			otherIntfNode, DP0XE_NAME)

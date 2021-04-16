@@ -10,6 +10,7 @@ import (
 
 	"github.com/danos/xpath-plugins/common"
 	"github.com/danos/yang/xpath"
+	"github.com/danos/yang/xpath/xutils"
 )
 
 var RegistrationData = []xpath.CustomFunctionInfo{
@@ -92,7 +93,7 @@ func isInterfaceLeafrefInternal(
 	intfVal, isVIF, vifVal := parseInterfaceName(srcNode.XValue())
 	root := srcNode.XRoot()
 
-	intfNodes := root.XChildren(intfFilter)
+	intfNodes := root.XChildren(intfFilter, xutils.Sorted)
 	if intfNodes == nil || len(intfNodes) > 1 {
 		return xpath.NewBoolDatum(false)
 	}
@@ -100,7 +101,7 @@ func isInterfaceLeafrefInternal(
 	// Now get all interface list entries (we get one big list with all
 	// interface list entries, XValue() == key).  This means we don't need
 	// to care about tagnode / ifname etc.
-	intfListEntries := intfNodes[0].XChildren(intfTypesFilter)
+	intfListEntries := intfNodes[0].XChildren(intfTypesFilter, xutils.Sorted)
 	if intfListEntries == nil {
 		return xpath.NewBoolDatum(false)
 	}
@@ -123,7 +124,7 @@ func isInterfaceLeafrefInternal(
 		}
 
 		// All VIFs are L3.
-		vifs := intf.XChildren(vifFilter)
+		vifs := intf.XChildren(vifFilter, xutils.Sorted)
 		for _, vif := range vifs {
 			if vif.XValue() == vifVal {
 				// Base interface and VIF both match. Pass.
