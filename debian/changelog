@@ -1,3 +1,10 @@
+golang-xpath-plugins (0.4.1) unstable; urgency=medium
+
+  * Create common package and use it
+  * Add vif-interface-plugin.
+
+ -- William Ivory <william.ivory@intl.att.com>  Mon, 26 Apr 2021 18:20:29 +0100
+
 golang-xpath-plugins (0.4) unstable; urgency=medium
 
   [ Brian Russell ]
