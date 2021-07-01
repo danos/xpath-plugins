@@ -1,3 +1,16 @@
+golang-xpath-plugins (0.5) unstable; urgency=medium
+
+  [ Nicholas Brown ]
+  * dh-systemd is part of debhelper
+  * Support for debian11 / bullseye
+  * Update to debian compat level 10
+
+  [ William Ivory ]
+  * Create common package and use it
+  * Add vif-interface-plugin.
+
+ -- Paul Carson <paul.carson@intl.att.com>  Thu, 01 Jul 2021 13:59:57 +0100
+
 golang-xpath-plugins (0.4) unstable; urgency=medium
 
   [ Brian Russell ]
